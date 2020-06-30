@@ -34,7 +34,8 @@ public class UserAuthorizationServiceImpl implements UserAuthorizationService {
     }
 
     @Override
-    public Optional<User> authorize(String login, String password) throws UserNotFoundException, WrongPasswordException {
+    public Optional<User> authorize(String login, String password)
+            throws UserNotFoundException, WrongPasswordException {
         Optional<User> user = userRepository.findByLogin(login);
 
         if (!user.isPresent()) {
