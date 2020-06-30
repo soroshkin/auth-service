@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Secured Zone</title>
+</head>
+<body>
+<div>
+    <p>Welcome to secured area, <span th:text="${user.login}">Unknown</span>
+    </p>
+    <p>You were born on <span th:text="${user.dateOfBirth}">Unknown</span>
+    </p>
+    <p>Your granted access role is <span th:text="${user.role}">Unknown</span>
+    </p>
+</div>
+<a href="/logout">Log out</a>
+</body>
+</html>
