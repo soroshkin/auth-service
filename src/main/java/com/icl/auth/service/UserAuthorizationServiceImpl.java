@@ -28,8 +28,8 @@ public class UserAuthorizationServiceImpl implements UserAuthorizationService {
     public User save(User user) {
         if (user.isNew()) {
             user.setRole(Role.USER);
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 

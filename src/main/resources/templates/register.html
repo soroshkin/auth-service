@@ -10,24 +10,24 @@
 <div class="register-form">
     <p class="p">Register new user</p>
 
-    <form method="post" th:object="${user}" th:action="@{/register}">
+    <form method="post" th:action="@{/register}">
         <div class="input-label">
             <label for="login"><strong>Login</strong></label>
-            <input type="text" th:field="*{login}" name="login" id="login" required>
+            <input type="text" name="login" id="login" required>
         </div>
         <div class="input-label">
             <label for="password"><strong>Password</strong></label>
-            <input type="password" th:field="*{password}" placeholder="Enter password" name="password" id="password" required/>
+            <input type="password" placeholder="Enter password" name="password" id="password" required/>
         </div>
         <div class="input-label">
             <label for="repeatPassword"><strong>Repeat password</strong></label>
             <input type="password" name="repeatPassword" id="repeatPassword" required
-            onkeyup='confirmPassword()'/>
+                   onkeyup='confirmPassword()'/>
             <span id="message"></span>
         </div>
         <div class="input-label">
             <label for="dateOfBirth"><strong>Date of birth</strong></label>
-            <input type="date" th:field="*{dateOfBirth}" name="dateOfBirth" id="dateOfBirth" required>
+            <input type="date" name="dateOfBirth" id="dateOfBirth" required>
         </div>
         <div class="registerBtn">
             <button type="submit">Register</button>

@@ -25,7 +25,7 @@ public class AuthController {
     }
 
     @GetMapping(path = "/")
-    public String mainPage(User user, HttpSession session, Model model) {
+    public String mainPage(HttpSession session, Model model) {
         User userFromSession = (User) session.getAttribute("user");
         if (userFromSession != null) {
             model.addAttribute("user", userFromSession);
@@ -36,7 +36,7 @@ public class AuthController {
     }
 
     @GetMapping(path = "/register")
-    public String showRegisterPage(User user) {
+    public String showRegisterPage() {
         return "register";
     }
 
@@ -46,7 +46,6 @@ public class AuthController {
         model.addAttribute("login", user.getLogin());
         return "login";
     }
-
 
     @PostMapping(path = "/login")
     public String login(String login, String password, Model model, HttpSession session)

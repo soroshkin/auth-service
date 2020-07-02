@@ -1,5 +1,6 @@
 package com.icl.auth.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icl.auth.security.Role;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
@@ -19,7 +20,6 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @ToString
-//@EqualsAndHashCode
 @NamedQuery(name = User.GET_BY_LOGIN, query = "SELECT u FROM User u WHERE login=:login")
 public class User implements Serializable {
     public static final String GET_BY_LOGIN = "GET_USER_BY_LOGIN";
@@ -38,6 +38,8 @@ public class User implements Serializable {
     @NotBlank
     @Length(min = 3)
     @Pattern(regexp = "\\w+\\W+")
+    @ToString.Exclude
+    @JsonIgnore
     private String password;
 
     @NotNull
