@@ -8,7 +8,6 @@ import com.icl.auth.security.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -23,7 +22,13 @@ public class UserAuthorizationServiceImpl implements UserAuthorizationService {
         this.passwordEncoder = encoder;
     }
 
-    @Transactional
+    /**
+     * Saves or updates user to database, if user is new, then method sets default {@link Role} USER and
+     * encodes password via {@link PasswordEncoder} passwordEncoder
+     *
+     * @param user object, which has to be saved into database
+     * @return updated or newly created user
+     */
     @Override
     public User save(User user) {
         if (user.isNew()) {
@@ -33,6 +38,15 @@ public class UserAuthorizationServiceImpl implements UserAuthorizationService {
         return userRepository.save(user);
     }
 
+    /**
+     * Method verifies if user is present in database and password is correct
+     *
+     * @param login    - user's login
+     * @param password - user's password
+     * @return user with given login and password
+     * @throws UserNotFoundException,  when user with given login not found
+     * @throws WrongPasswordException, when wrong password is given
+     */
     @Override
     public Optional<User> authorize(String login, String password)
             throws UserNotFoundException, WrongPasswordException {

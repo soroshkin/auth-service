@@ -24,6 +24,12 @@ public class AuthController {
         this.userAuthorizationService = userAuthorizationService;
     }
 
+    /**
+     * Method checks if session contains {@link User} object, which is logged in.
+     * @param session HttpSession, which holds user logged in.
+     * @param model holds {@link User} object from session.
+     * @return main page depending on whether user logged in or not.
+     */
     @GetMapping(path = "/")
     public String mainPage(HttpSession session, Model model) {
         User userFromSession = (User) session.getAttribute("user");
@@ -35,11 +41,19 @@ public class AuthController {
         }
     }
 
+    /**
+     * @return view with name "register"
+     */
     @GetMapping(path = "/register")
     public String showRegisterPage() {
         return "register";
     }
 
+    /**
+     * Creates new {@link User} object and saves it into database
+     * @param user to be saved into database
+     * @return name of the view, which should be rendered
+     */
     @PostMapping(path = "/register")
     public String registerNewUser(User user, Model model) {
         userAuthorizationService.save(user);
@@ -47,6 +61,16 @@ public class AuthController {
         return "login";
     }
 
+    /**
+     * Processes user authentication
+     * @param login - user's login
+     * @param password - user's password
+     * @param model {@link Model} - takes user as attribute and transfers it to the view
+     * @param session - {@link HttpSession} object, needed to hold authenticated user
+     * @return name of the view to be rendered
+     * @throws UserNotFoundException, when user with that login not found
+     * @throws WrongPasswordException, when wrong password is given
+     */
     @PostMapping(path = "/login")
     public String login(String login, String password, Model model, HttpSession session)
             throws UserNotFoundException, WrongPasswordException {
@@ -60,6 +84,10 @@ public class AuthController {
         return "login";
     }
 
+    /**
+     * Deletes user from {@link HttpSession} session
+     * @return login view name
+     */
     @GetMapping(path = "/logout")
     @ResponseStatus(code = HttpStatus.OK)
     public String logout(HttpSession session) {

@@ -8,7 +8,7 @@ insert into user (id, date_of_birth, login, password, role) values
 
 insert into user (id, date_of_birth, login, password, role) values
 (2,
-'1111-11-17',
+'2000-11-17',
 'q',
 '$2a$10$mxQGryHoBtLHmfE/4vuq7.fiUcKEg6vvKITnBEd50/LPL6XjVUaEe',
 'USER');

@@ -4,8 +4,10 @@ import com.icl.auth.exception.UserNotFoundException;
 import com.icl.auth.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -15,7 +17,8 @@ import java.util.Optional;
 
 @Repository
 public class JpaUserRepository implements UserRepository {
-    EntityManager em;
+    @PersistenceContext
+    private EntityManager em;
 
     @Autowired
     public JpaUserRepository(EntityManager em) {
@@ -35,6 +38,7 @@ public class JpaUserRepository implements UserRepository {
     }
 
     @Override
+    @Transactional
     public User save(User user) {
         if (user.isNew()) {
             em.persist(user);
@@ -45,6 +49,7 @@ public class JpaUserRepository implements UserRepository {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) throws UserNotFoundException {
         User user;
         if ((user = em.find(User.class, id)) != null) {
