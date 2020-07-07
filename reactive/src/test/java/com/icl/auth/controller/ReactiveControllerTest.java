@@ -90,22 +90,14 @@ public class ReactiveControllerTest {
     }
 
     @Test
-    public void securedZoneShouldReturnStatusOk() {
+    public void securedZoneShouldReturnStatusForbidden() {
         when(userService.authorize(anyString(), anyString()))
                 .thenReturn(Mono.just(user));
-
-        webTestClient.post()
-                .uri("/login")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData("login", "john")
-                        .with("password", "rightPassword"))
-                .exchange()
-                .expectStatus().isOk();
 
         webTestClient.get()
                 .uri("/secured")
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isForbidden();
     }
 
     @Test
