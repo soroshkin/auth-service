@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import javax.validation.Valid;
+
 @Service
 public class ReactiveUserService implements UserService {
     private ReactiveUserRepository userRepository;

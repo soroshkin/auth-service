@@ -1,5 +1,6 @@
 package com.icl.auth.controller;
 
+import com.icl.auth.config.AuthorizationFilter;
 import com.icl.auth.exception.UserNotFoundException;
 import com.icl.auth.exception.WrongPasswordException;
 import com.icl.auth.model.User;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -27,13 +29,16 @@ public class ReactiveControllerTest {
     @Autowired
     private WebTestClient webTestClient;
 
+    @Autowired
+    private AuthorizationFilter filter;
+
     @MockBean
     private UserService userService;
 
     @MockBean
     private PasswordEncoder encoder;
 
-    private User user = new User("newUser", "password",
+    private User user = new User("newUser", "password?@",
             LocalDate.now().minus(5, ChronoUnit.YEARS), Role.ADMIN);
 
     @Test
@@ -80,9 +85,17 @@ public class ReactiveControllerTest {
 
     @Test
     public void registerNewUserShouldReturnStatusOk() {
+        MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+        bodyBuilder.part("login", user.getLogin());
+        bodyBuilder.part("password", user.getPassword());
+        bodyBuilder.part("role", user.getRole().toString());
+        bodyBuilder.part("dateOfBirth", user.getDateOfBirth().toString());
         when(userService.save(any(User.class))).thenReturn(Mono.just(user));
+
         webTestClient.post()
                 .uri("/register")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User.class)
@@ -90,18 +103,8 @@ public class ReactiveControllerTest {
     }
 
     @Test
-    public void securedZoneShouldReturnStatusForbidden() {
-        when(userService.authorize(anyString(), anyString()))
-                .thenReturn(Mono.just(user));
-
-        webTestClient.get()
-                .uri("/secured")
-                .exchange()
-                .expectStatus().isForbidden();
-    }
-
-    @Test
     public void findByIdShouldFindUser() {
+        filter.addToWhitelist("/user/1");
         when(userService.findById(anyLong())).thenReturn(Mono.just(user));
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/user/{id}")
@@ -118,8 +121,7 @@ public class ReactiveControllerTest {
                 .uri(uriBuilder -> uriBuilder.path("/user/{id}")
                         .build(1L))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(User.class);
+                .expectStatus().isUnauthorized();
     }
 }
 
