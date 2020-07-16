@@ -5,6 +5,8 @@ import com.icl.auth.exception.UserNotFoundException;
 import com.icl.auth.exception.WrongPasswordException;
 import com.icl.auth.model.User;
 import com.icl.auth.security.Role;
+import com.icl.auth.security.TokenAuthenticationManager;
+import com.icl.auth.service.TokenService;
 import com.icl.auth.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +40,18 @@ public class ReactiveControllerTest {
     @MockBean
     private PasswordEncoder encoder;
 
+    @MockBean
+    private TokenService tokenService;
+
+    @MockBean
+    private TokenAuthenticationManager tokenAuthenticationManager;
+
     private User user = new User("newUser", "password?@",
             LocalDate.now().minus(5, ChronoUnit.YEARS), Role.ADMIN);
 
     @Test
     public void ifUserPasswordIsOkReturnOk() {
-        when(userService.authorize(anyString(), anyString()))
+        when(userService.checkCredentials(anyString(), anyString()))
                 .thenReturn(Mono.just(user));
 
         webTestClient.post()
@@ -57,7 +65,7 @@ public class ReactiveControllerTest {
 
     @Test
     public void ifUserPasswordIsWrongThrowException() {
-        when(userService.authorize(anyString(), anyString()))
+        when(userService.checkCredentials(anyString(), anyString()))
                 .thenReturn(Mono.error(WrongPasswordException::new));
 
         webTestClient.post()
@@ -71,7 +79,7 @@ public class ReactiveControllerTest {
 
     @Test
     public void ifUserLoginIsWrongThrowException() {
-        when(userService.authorize(anyString(), anyString()))
+        when(userService.checkCredentials(anyString(), anyString()))
                 .thenReturn(Mono.error(UserNotFoundException::new));
 
         webTestClient.post()
@@ -122,6 +130,21 @@ public class ReactiveControllerTest {
                         .build(1L))
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    void testAuthorization() {
+        when(userService.checkCredentials(anyString(), anyString()))
+                .thenReturn(Mono.just(user));
+
+        webTestClient.post()
+                .uri("/login")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData("login", "john")
+                        .with("password", "rightPassword"))
+
+                .exchange()
+                .expectStatus().isOk();
     }
 }
 

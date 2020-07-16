@@ -1,6 +1,9 @@
 package com.icl.auth.config;
 
+import com.icl.auth.security.TokenAuthenticationManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.*;
@@ -12,12 +15,16 @@ import java.util.Set;
 @Component
 public class AuthorizationFilter implements WebFilter {
     private Set<String> allowedURIList = new HashSet<>();
+    private TokenAuthenticationManager tokenAuthenticationManager;
 
-    public AuthorizationFilter() {
+    @Autowired
+    public AuthorizationFilter(TokenAuthenticationManager tokenAuthenticationManager) {
+        this.tokenAuthenticationManager = tokenAuthenticationManager;
         this
                 .addToWhitelist("/login")
                 .addToWhitelist("/register")
-                .addToWhitelist("/logout");
+                .addToWhitelist("/logout")
+                .addToWhitelist("/console");
     }
 
     /**
@@ -33,8 +40,7 @@ public class AuthorizationFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         if (!allowedURIList.contains(exchange.getRequest().getURI().getPath())) {
-
-            return checkAuthorization(exchange.getSession())
+            return checkAuthorization(exchange.getRequest())
                     .doOnError(error -> {
                     })
                     .then(chain.filter(exchange));
@@ -45,18 +51,17 @@ public class AuthorizationFilter implements WebFilter {
     /**
      * Looks up for user attribute in session.
      *
-     * @param sessionMono current {@link WebSession} session
      * @return {@link ServerResponse} with {@link HttpStatus} OK if user attribute is found in session,
      * or Mono.error if user is not authorized.
      */
-    private Mono<ServerResponse> checkAuthorization(Mono<WebSession> sessionMono) {
-        return sessionMono.flatMap(session -> {
-            if (session.getAttribute("user") == null) {
-                return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-            } else {
-                return ServerResponse.status(HttpStatus.OK).build();
-            }
-        });
+    private Mono<ServerResponse> checkAuthorization(ServerHttpRequest request) {
+        if (request.getHeaders().get("Authorization") != null) {
+            return tokenAuthenticationManager.authorize(request.getHeaders().getFirst("Authorization"))
+                    .flatMap(token -> ServerResponse.status(HttpStatus.OK).build())
+                    .onErrorResume(error -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED)));
+        } else {
+            return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        }
     }
 
     /**

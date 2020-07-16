@@ -3,11 +3,13 @@ package com.icl.auth.controller;
 import com.icl.auth.exception.UserNotFoundException;
 import com.icl.auth.exception.WrongPasswordException;
 import com.icl.auth.model.User;
+import com.icl.auth.service.TokenService;
 import com.icl.auth.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +27,12 @@ import java.util.Optional;
 public class ReactiveController {
     private UserService userService;
 
+    private TokenService tokenService;
+
     @Autowired
-    public ReactiveController(UserService userService) {
+    public ReactiveController(UserService userService, TokenService tokenService) {
         this.userService = userService;
+        this.tokenService = tokenService;
     }
 
     /**
@@ -46,11 +51,11 @@ public class ReactiveController {
      * Processes user authentication
      *
      * @param exchange is {@link ServerWebExchange} object, which contains login form data
-     * @param session  will contain {@link User} object, if logging is successful
-     * @return Mono of ResponseEntity with {@link User} inside body if user is found, or null if not
+     * @return Mono of ResponseEntity with {@link User} inside body if user is found, or null if not. Result contains
+     * header named Authorization, which contains created token
      */
     @PostMapping(path = "/login", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public Mono<ResponseEntity<User>> login(ServerWebExchange exchange, WebSession session) {
+    public Mono<ResponseEntity<User>> login(ServerWebExchange exchange) {
         Mono<MultiValueMap<String, String>> data = exchange.getFormData()
                 .flatMap(formData -> {
                     MultiValueMap<String, String> formDataResponse = new LinkedMultiValueMap<>();
@@ -59,11 +64,11 @@ public class ReactiveController {
                 });
 
         return data.flatMap(formData ->
-                userService.authorize(formData.getFirst("login"), formData.getFirst("password"))
-                        .map(user -> {
-                            session.getAttributes().putIfAbsent("user", user);
-                            return ResponseEntity.ok().body(user);
-                        })
+                userService.checkCredentials(formData.getFirst("login"), formData.getFirst("password"))
+                        .map(user -> ResponseEntity
+                                .ok()
+                                .header("Authorization", tokenService.createToken(user))
+                                .body(user))
                         .onErrorResume(WrongPasswordException.class, exception ->
                                 Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(null)))
                         .onErrorResume(UserNotFoundException.class, exception ->
@@ -71,14 +76,16 @@ public class ReactiveController {
     }
 
     /**
-     * Deletes user from {@link WebSession} session
+     * Inserts token into expired token table
      *
-     * @return ResponseEntity with {@link HttpStatus} OK
+     * @param request is Http-request
+     * @return {@link Mono} of ResponseEntity with {@link HttpStatus} OK
      */
     @GetMapping(path = "/logout")
-    public ResponseEntity<HttpStatus> logout(WebSession session) {
-        session.getAttributes().remove("user");
-        return ResponseEntity.ok(HttpStatus.OK);
+    public Mono<ResponseEntity<HttpStatus>> logout(ServerHttpRequest request) {
+        return tokenService.createExpiredToken(request.getHeaders().getFirst("Authorization"))
+                .map(expiredToken ->
+                        ResponseEntity.status(HttpStatus.OK).header("Authorization").build());
     }
 
     /**

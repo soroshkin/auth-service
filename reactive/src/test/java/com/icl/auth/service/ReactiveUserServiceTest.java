@@ -43,7 +43,7 @@ class ReactiveUserServiceTest {
         when(userRepository.findByLogin(anyString())).thenReturn(Mono.empty());
 
         StepVerifier
-                .create(userService.authorize("login", "password"))
+                .create(userService.checkCredentials("login", "password"))
                 .expectError(UserNotFoundException.class)
                 .verify();
     }
@@ -53,7 +53,7 @@ class ReactiveUserServiceTest {
         when(userRepository.findByLogin(anyString())).thenReturn(Mono.just(user));
 
         StepVerifier
-                .create(userService.authorize("login", "password"))
+                .create(userService.checkCredentials("login", "password"))
                 .expectError(WrongPasswordException.class)
                 .verify();
     }

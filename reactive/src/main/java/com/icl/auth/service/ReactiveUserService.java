@@ -10,8 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import javax.validation.Valid;
-
 @Service
 public class ReactiveUserService implements UserService {
     private ReactiveUserRepository userRepository;
@@ -44,12 +42,12 @@ public class ReactiveUserService implements UserService {
     /**
      * Method verifies if user is present in database and password is correct
      *
-     * @param login - user's login
+     * @param login    - user's login
      * @param password - user's password
      * @return Mono<User> with given login and password
      */
     @Override
-    public Mono<User> authorize(String login, String password) {
+    public Mono<User> checkCredentials(String login, String password) {
         return userRepository.findByLogin(login)
                 .flatMap(user -> {
                     if (encoder.matches(password, user.getPassword())) {
@@ -63,11 +61,12 @@ public class ReactiveUserService implements UserService {
 
     /**
      * Searches user in database
+     *
      * @param id user id to be found
      * @return Mono<User> if user is found, or Optional.empty() if not
      */
     @Override
-    public Mono<User> findById(Long id){
+    public Mono<User> findById(Long id) {
         return userRepository.findById(id);
     }
 }

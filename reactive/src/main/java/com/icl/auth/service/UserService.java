@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 public interface UserService {
     Mono<User> save(User user);
 
-    Mono<User> authorize(String login, String password);
+    Mono<User> checkCredentials(String login, String password);
 
     Mono<User> findById(Long id);
 }
