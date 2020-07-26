@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
@@ -83,7 +82,7 @@ public class ReactiveController {
      */
     @GetMapping(path = "/logout")
     public Mono<ResponseEntity<HttpStatus>> logout(ServerHttpRequest request) {
-        return tokenService.createExpiredToken(request.getHeaders().getFirst("Authorization"))
+        return tokenService.createBlockedToken(request.getHeaders().getFirst("Authorization"))
                 .map(expiredToken ->
                         ResponseEntity.status(HttpStatus.OK).header("Authorization").build());
     }

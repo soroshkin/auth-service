@@ -1,7 +1,7 @@
 package com.icl.auth.security;
 
 import com.icl.auth.exception.TokenNotFoundException;
-import com.icl.auth.model.ExpiredToken;
+import com.icl.auth.model.BlockedToken;
 import com.icl.auth.service.TokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +27,8 @@ class TokenAuthenticationManagerTest {
                 ".eyJzdWIiOiJhY2Nlc3MgdG8gc2VjdXJlZCB6b25lIiwiZXhwIjoxNTk0ODAxNTgwLCJpYXQiOjE1OTQ3OTk3ODAsInVzZXIiOiJxIn0" +
                 ".T_mHWYOOvjdoDvh6ouv-QbnVeTNqhHnBdL2t51cTnh8";
         String id = "expiredTokenId";
-        ExpiredToken expiredToken = new ExpiredToken(id);
-        when(tokenService.findExpiredTokenById(anyString())).thenReturn(Mono.error(TokenNotFoundException::new));
+        BlockedToken blockedToken = new BlockedToken(id);
+        when(tokenService.findBlockedTokenById(anyString())).thenReturn(Mono.error(TokenNotFoundException::new));
 
         StepVerifier.create(manager.authorize(tokenIdInDatabase))
                 .expectNext(tokenIdInDatabase);
@@ -37,10 +37,10 @@ class TokenAuthenticationManagerTest {
     @Test
     void authorizeShouldReturnMonoTokenExpiredException() {
         String id = "expiredTokenId";
-        ExpiredToken expiredToken = new ExpiredToken(id);
-        when(tokenService.findExpiredTokenById(anyString())).thenReturn(Mono.just(expiredToken));
+        BlockedToken blockedToken = new BlockedToken(id);
+        when(tokenService.findBlockedTokenById(anyString())).thenReturn(Mono.just(blockedToken));
 
         StepVerifier.create(manager.authorize(id))
-                .expectNext(expiredToken.toString());
+                .expectNext(blockedToken.toString());
     }
 }

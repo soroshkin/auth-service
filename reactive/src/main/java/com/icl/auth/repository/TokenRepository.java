@@ -1,12 +1,15 @@
 package com.icl.auth.repository;
 
-import com.icl.auth.model.ExpiredToken;
+import com.icl.auth.model.BlockedToken;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface TokenRepository {
-    Mono<ExpiredToken> create(ExpiredToken token);
+    Mono<BlockedToken> create(BlockedToken token);
 
-    Mono<Object> delete(ExpiredToken token);
+    Mono<BlockedToken> delete(BlockedToken token);
 
-    Mono<ExpiredToken> findById(String id);
+    Mono<BlockedToken> findById(String id);
+
+    Flux<BlockedToken> findAll();
 }
