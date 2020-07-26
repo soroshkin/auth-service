@@ -6,7 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import org.springframework.web.server.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.HashSet;
@@ -41,11 +44,11 @@ public class AuthorizationFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         if (!allowedURIList.contains(exchange.getRequest().getURI().getPath())) {
             return checkAuthorization(exchange.getRequest())
-                    .doOnError(error -> {
-                    })
-                    .then(chain.filter(exchange));
+                    .doOnNext(string -> chain.filter(exchange))
+                    .then();
+        } else {
+            return chain.filter(exchange);
         }
-        return chain.filter(exchange);
     }
 
     /**
@@ -54,10 +57,9 @@ public class AuthorizationFilter implements WebFilter {
      * @return {@link ServerResponse} with {@link HttpStatus} OK if user attribute is found in session,
      * or Mono.error if user is not authorized.
      */
-    private Mono<ServerResponse> checkAuthorization(ServerHttpRequest request) {
+    private Mono<String> checkAuthorization(ServerHttpRequest request) {
         if (request.getHeaders().get("Authorization") != null) {
             return tokenAuthenticationManager.authorize(request.getHeaders().getFirst("Authorization"))
-                    .flatMap(token -> ServerResponse.status(HttpStatus.OK).build())
                     .onErrorResume(error -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED)));
         } else {
             return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
