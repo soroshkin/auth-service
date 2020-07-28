@@ -44,11 +44,9 @@ public class AuthorizationFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         if (!allowedURIList.contains(exchange.getRequest().getURI().getPath())) {
             return checkAuthorization(exchange.getRequest())
-                    .doOnNext(string -> chain.filter(exchange))
-                    .then();
-        } else {
-            return chain.filter(exchange);
+                    .flatMap(string -> chain.filter(exchange));
         }
+        return chain.filter(exchange);
     }
 
     /**
