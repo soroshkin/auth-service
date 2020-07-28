@@ -2,13 +2,10 @@ package com.icl.auth.repository;
 
 import com.icl.auth.exception.TokenNotFoundException;
 import com.icl.auth.model.BlockedToken;
-import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.ValidationDepth;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Objects;
@@ -62,24 +59,5 @@ public class ReactiveBlockedTokenRepositoryTest {
         StepVerifier.create(tokenRepository.findAll())
                 .expectNextMatches(blockedToken -> blockedToken.getId().equals(tokenIdInDatabase))
                 .expectNextMatches(blockedToken -> blockedToken.getId().equals(secondTokenInDatabase));
-    }
-
-    @Test
-    void executeInTransaction() {
-        Connection[] connection = new Connection[1];
-
-        StepVerifier.create(tokenRepository.executeInTransaction(conn -> {
-            connection[0] = conn;
-            return Mono.just(new BlockedToken("new token"));
-        })
-                .map(blockedToken -> Mono.from(connection[0].validate(ValidationDepth.LOCAL)))
-                .map(Mono::from))
-                .expectNextMatches(booleanMono ->
-                        Objects.requireNonNull(booleanMono.map(Boolean::booleanValue).block()))
-                .verifyComplete();
-
-        StepVerifier.create(connection[0].validate(ValidationDepth.LOCAL))
-                .expectNext(false)
-                .verifyComplete();
     }
 }
